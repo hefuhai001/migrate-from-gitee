@@ -9,9 +9,35 @@ jobs:
     strategy:
       matrix:
         repo: 
-          - gitee-repo-1
-          - gitee-repo-2
-          - gitee-repo-3
+          - saas-admin
+          - single-admin
+          - medicine-system
+          - note-of-spring
+          - books-zhiyue-platform
+          - note-of-vue3
+          - voice-accounting
+          - one-page
+          - code-run-platform
+          - valvular-disease-system
+          - blog-vitepress
+          - note-of-web
+          - note-of-vue2
+          - note-of-ai
+          - code-run-r
+          - note-of-django
+          - paper-generator-tool
+          - ai-multiple-model
+          - form-design
+          - books-zhiyue-platform
+          - bookmark-classfiy
+          - books-manage-system
+          - cultural-heritage-system
+          - hotel-manage-system
+          - chat-terminal-app
+          - community-elder-system
+          - geriatric-care-system
+          - culture-Inheritance-system
+          - music-player-system
     steps:
       - name: 执行镜像迁移
         uses: Yikun/hub-mirror-action@v1.2
