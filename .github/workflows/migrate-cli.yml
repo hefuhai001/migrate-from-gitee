@@ -1,0 +1,58 @@
+name: 使用GitHub CLI批量迁移
+
+on:
+  workflow_dispatch:  # 手动触发
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 安装 GitHub CLI
+        run: |
+          curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+          echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+          sudo apt update
+          sudo apt install gh -y
+      
+      - name: 配置 Git 并克隆 Gitee 仓库
+        env:
+          GITEE_TOKEN: ${{ secrets.GITEE_TOKEN }}
+          GITEE_USERNAME: ${{ secrets.GITEE_USERNAME }}
+        run: |
+          # 配置 Git 全局设置
+          git config --global user.name "你的GitHub用户名"
+          git config --global user.email "你的邮箱@example.com"
+          
+          # 创建工作目录
+          mkdir -p ~/migrate-workspace
+          cd ~/migrate-workspace
+          
+          # 定义要迁移的仓库列表
+          REPOS=(
+            "gitee-repo-1"
+            "gitee-repo-2"
+            "gitee-repo-3"
+          )
+          
+          for REPO in "${REPOS[@]}"; do
+            echo "正在迁移: $REPO"
+            
+            # 1. 从 Gitee 克隆
+            git clone --mirror https://$GITEE_USERNAME:$GITEE_TOKEN@gitee.com/$GITEE_USERNAME/$REPO.git
+            
+            # 2. 进入仓库目录
+            cd $REPO.git
+            
+            # 3. 在 GitHub 上创建同名仓库（公开或私有，根据需求调整 --private 或 --public）
+            gh repo create $REPO --public --confirm || true
+            
+            # 4. 推送到 GitHub
+            git push --mirror https://${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository_owner }}/$REPO.git
+            
+            # 5. 返回上级目录，清理
+            cd ..
+            rm -rf $REPO.git
+            
+            echo "✅ $REPO 迁移完成"
+          done
