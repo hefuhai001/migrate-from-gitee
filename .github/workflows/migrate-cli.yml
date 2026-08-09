@@ -30,49 +30,13 @@ jobs:
           
           # 所有要迁移的仓库（去重后共28个）
           REPOS=(
-            "books-zhiyue-platform"
-            "note-of-vue3"
-            "voice-accounting"
-            "one-page"
-            "code-run-platform"
-            "valvular-disease-system"
-            "blog-vitepress"
-            "note-of-web"
-            "note-of-vue2"
-            "note-of-ai"
-            "code-run-r"
-            "note-of-django"
-            "paper-generator-tool"
-            "ai-multiple-model"
-            "form-design"
-            "bookmark-classfiy"
-            "books-manage-system"
-            "cultural-heritage-system"
-            "hotel-manage-system"
-            "chat-terminal-app"
-            "community-elder-system"
-            "geriatric-care-system"
-            "culture-Inheritance-system"
-            "music-player-system"
+            "saas-admin"
+            "aingle-admin"
           )
           
           # 私有仓库列表
           PRIVATE_REPOS=(
-            "voice-accounting"
-            "one-page"
-            "code-run-platform"
-            "valvular-disease-system"
-            "note-of-web"
-            "code-run-r"
-            "note-of-django"
-            "paper-generator-tool"
-            "ai-multiple-model"
-            "cultural-heritage-system"
-            "hotel-manage-system"
             "chat-terminal-app"
-            "geriatric-care-system"
-            "culture-Inheritance-system"
-            "music-player-system"
           )
           
           TOTAL=${#REPOS[@]}
