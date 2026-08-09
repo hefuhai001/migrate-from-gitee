@@ -30,10 +30,6 @@ jobs:
           
           # 所有要迁移的仓库（去重后共28个）
           REPOS=(
-            "saas-admin"
-            "single-admin"
-            "medicine-system"
-            "note-of-spring"
             "books-zhiyue-platform"
             "note-of-vue3"
             "voice-accounting"
@@ -67,7 +63,6 @@ jobs:
             "code-run-platform"
             "valvular-disease-system"
             "note-of-web"
-            "note-of-ai"
             "code-run-r"
             "note-of-django"
             "paper-generator-tool"
