@@ -7,7 +7,6 @@ jobs:
   migrate:
     runs-on: ubuntu-latest
     
-    # 🔧 授予写入权限
     permissions:
       contents: write
     
@@ -28,7 +27,7 @@ jobs:
         env:
           GITEE_TOKEN: ${{ secrets.GITEE_TOKEN }}
           GITEE_USERNAME: ${{ secrets.GITEE_USERNAME }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_PAT: ${{ secrets.GH_PAT }}
         run: |
           mkdir -p ~/migrate
           cd ~/migrate
@@ -112,13 +111,14 @@ jobs:
             git clone --mirror https://$GITEE_USERNAME:$GITEE_TOKEN@gitee.com/$GITEE_USERNAME/$REPO.git
             
             if [ $? -ne 0 ]; then
-              echo "❌ 克隆失败，跳过 $REPO"
+              echo "❌ 克隆失败（仓库不存在或没有权限），跳过 $REPO"
               FAILED=$((FAILED + 1))
               continue
             fi
             
             cd $REPO.git
             
+            # 使用 GH_PAT 创建仓库
             if [ "$IS_PRIVATE" == "true" ]; then
               echo "🔒 创建私有仓库: $REPO"
               gh repo create $REPO --private --confirm 2>/dev/null || true
@@ -128,7 +128,8 @@ jobs:
             fi
             
             echo "📤 推送到 GitHub ..."
-            git push --mirror https://hefuhai001:$GITHUB_TOKEN@github.com/hefuhai001/$REPO.git
+            # 使用 GH_PAT 推送
+            git push --mirror https://hefuhai001:$GH_PAT@github.com/hefuhai001/$REPO.git
             
             if [ $? -eq 0 ]; then
               echo "✅ $REPO 迁移成功！"
