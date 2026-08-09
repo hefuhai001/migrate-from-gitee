@@ -8,17 +8,16 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-      - name: 安装 GitHub CLI
+      - name: 安装 Git（已预装，无需额外安装）
         run: |
-          curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
-          echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
-          sudo apt update
-          sudo apt install gh -y
+          git --version
       
       - name: 配置 Git
         run: |
           git config --global user.name "hefuhai001"
           git config --global user.email "你的邮箱@example.com"
+          # 配置 Git 凭证缓存，避免重复输入密码
+          git config --global credential.helper cache
       
       - name: 批量迁移所有仓库
         env:
@@ -26,12 +25,10 @@ jobs:
           GITEE_USERNAME: ${{ secrets.GITEE_USERNAME }}
           GH_PAT: ${{ secrets.GH_PAT }}
         run: |
-          # 🔑 关键：使用 GH_PAT 登录 GitHub CLI
-          echo $GH_PAT | gh auth login --with-token
-          
           mkdir -p ~/migrate
           cd ~/migrate
           
+          # 所有要迁移的仓库（去重后共28个）
           REPOS=(
             "saas-admin"
             "single-admin"
@@ -63,6 +60,7 @@ jobs:
             "music-player-system"
           )
           
+          # 私有仓库列表
           PRIVATE_REPOS=(
             "voice-accounting"
             "one-page"
@@ -99,6 +97,7 @@ jobs:
             echo "🔄 [$CURRENT/$TOTAL] 正在处理: $REPO"
             echo "========================================="
             
+            # 检查是否是私有仓库
             IS_PRIVATE="false"
             for PRIVATE_REPO in "${PRIVATE_REPOS[@]}"; do
               if [ "$REPO" == "$PRIVATE_REPO" ]; then
@@ -107,6 +106,7 @@ jobs:
               fi
             done
             
+            # 1. 从 Gitee 克隆
             echo "📥 从 Gitee 克隆 $REPO ..."
             git clone --mirror https://$GITEE_USERNAME:$GITEE_TOKEN@gitee.com/$GITEE_USERNAME/$REPO.git
             
@@ -118,16 +118,26 @@ jobs:
             
             cd $REPO.git
             
+            # 2. 构造 GitHub 推送 URL
+            GITHUB_URL="https://hefuhai001:$GH_PAT@github.com/hefuhai001/$REPO.git"
+            
+            # 3. 先尝试创建空仓库（通过 API，使用 GH_PAT）
+            echo "📝 在 GitHub 创建仓库: $REPO"
             if [ "$IS_PRIVATE" == "true" ]; then
-              echo "🔒 创建私有仓库: $REPO"
-              gh repo create $REPO --private --confirm 2>/dev/null || true
+              curl -X POST -H "Authorization: token $GH_PAT" \
+                -H "Accept: application/vnd.github.v3+json" \
+                https://api.github.com/user/repos \
+                -d "{\"name\":\"$REPO\",\"private\":true}" 2>/dev/null || echo "⚠️ 仓库可能已存在"
             else
-              echo "🌐 创建公开仓库: $REPO"
-              gh repo create $REPO --public --confirm 2>/dev/null || true
+              curl -X POST -H "Authorization: token $GH_PAT" \
+                -H "Accept: application/vnd.github.v3+json" \
+                https://api.github.com/user/repos \
+                -d "{\"name\":\"$REPO\",\"private\":false}" 2>/dev/null || echo "⚠️ 仓库可能已存在"
             fi
             
+            # 4. 推送到 GitHub
             echo "📤 推送到 GitHub ..."
-            git push --mirror https://hefuhai001:$GH_PAT@github.com/hefuhai001/$REPO.git
+            git push --mirror $GITHUB_URL
             
             if [ $? -eq 0 ]; then
               echo "✅ $REPO 迁移成功！"
