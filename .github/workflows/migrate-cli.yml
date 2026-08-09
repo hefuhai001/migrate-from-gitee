@@ -1,4 +1,4 @@
-name: 使用GitHub CLI批量迁移
+name: 批量迁移Gitee仓库到GitHub
 
 on:
   workflow_dispatch:  # 手动触发
@@ -15,44 +15,146 @@ jobs:
           sudo apt update
           sudo apt install gh -y
       
-      - name: 配置 Git 并克隆 Gitee 仓库
+      - name: 配置 Git
+        run: |
+          git config --global user.name "hefuhai001"
+          git config --global user.email "你的邮箱@example.com"  # 替换为你的GitHub邮箱
+      
+      - name: 批量迁移所有仓库
         env:
           GITEE_TOKEN: ${{ secrets.GITEE_TOKEN }}
           GITEE_USERNAME: ${{ secrets.GITEE_USERNAME }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # 配置 Git 全局设置
-          git config --global user.name "你的GitHub用户名"
-          git config --global user.email "你的邮箱@example.com"
+          # 创建临时工作目录
+          mkdir -p ~/migrate
+          cd ~/migrate
           
-          # 创建工作目录
-          mkdir -p ~/migrate-workspace
-          cd ~/migrate-workspace
-          
-          # 定义要迁移的仓库列表
+          # ============================================
+          # 🔧 所有要迁移的仓库列表（共29个）
+          # ============================================
           REPOS=(
-            "gitee-repo-1"
-            "gitee-repo-2"
-            "gitee-repo-3"
+            "saas-admin"
+            "single-admin"
+            "medicine-system"
+            "note-of-spring"
+            "books-zhiyue-platform"
+            "note-of-vue3"
+            "voice-accounting"
+            "one-page"
+            "code-run-platform"
+            "valvular-disease-system"
+            "blog-vitepress"
+            "note-of-web"
+            "note-of-vue2"
+            "note-of-ai"
+            "code-run-r"
+            "note-of-django"
+            "paper-generator-tool"
+            "ai-multiple-model"
+            "form-design"
+            "bookmark-classfiy"  # 注意原列表中的拼写是 classfiy
+            "books-manage-system"
+            "cultural-heritage-system"
+            "hotel-manage-system"
+            "chat-terminal-app"
+            "community-elder-system"
+            "geriatric-care-system"
+            "culture-Inheritance-system"
+            "music-player-system"
           )
           
+          # ============================================
+          # 📋 私有仓库列表（需要单独标注）
+          # ============================================
+          PRIVATE_REPOS=(
+            # 在这里列出你的私有仓库名，例如：
+            # "saas-admin"
+            # "medicine-system"
+          )
+          
+          # ============================================
+          # 开始迁移
+          # ============================================
+          TOTAL=${#REPOS[@]}
+          CURRENT=0
+          SUCCESS=0
+          FAILED=0
+          
+          echo "========================================="
+          echo "📊 总共需要迁移 $TOTAL 个仓库"
+          echo "========================================="
+          
           for REPO in "${REPOS[@]}"; do
-            echo "正在迁移: $REPO"
+            CURRENT=$((CURRENT + 1))
+            echo ""
+            echo "========================================="
+            echo "🔄 [$CURRENT/$TOTAL] 正在处理: $REPO"
+            echo "========================================="
             
-            # 1. 从 Gitee 克隆
+            # 检查仓库是否是私有
+            IS_PRIVATE="false"
+            for PRIVATE_REPO in "${PRIVATE_REPOS[@]}"; do
+              if [ "$REPO" == "$PRIVATE_REPO" ]; then
+                IS_PRIVATE="true"
+                break
+              fi
+            done
+            
+            # 1. 从 Gitee 克隆镜像
+            echo "📥 从 Gitee 克隆 $REPO ..."
             git clone --mirror https://$GITEE_USERNAME:$GITEE_TOKEN@gitee.com/$GITEE_USERNAME/$REPO.git
+            
+            if [ $? -ne 0 ]; then
+              echo "❌ 克隆失败，跳过 $REPO"
+              FAILED=$((FAILED + 1))
+              continue
+            fi
             
             # 2. 进入仓库目录
             cd $REPO.git
             
-            # 3. 在 GitHub 上创建同名仓库（公开或私有，根据需求调整 --private 或 --public）
-            gh repo create $REPO --public --confirm || true
+            # 3. 在 GitHub 上创建同名仓库
+            if [ "$IS_PRIVATE" == "true" ]; then
+              echo "🔒 创建私有仓库: $REPO"
+              gh repo create $REPO --private --confirm || echo "⚠️ 仓库可能已存在，继续推送"
+            else
+              echo "🌐 创建公开仓库: $REPO"
+              gh repo create $REPO --public --confirm || echo "⚠️ 仓库可能已存在，继续推送"
+            fi
             
             # 4. 推送到 GitHub
-            git push --mirror https://${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository_owner }}/$REPO.git
+            echo "📤 推送到 GitHub ..."
+            git push --mirror https://hefuhai001:$GITHUB_TOKEN@github.com/hefuhai001/$REPO.git
             
-            # 5. 返回上级目录，清理
+            if [ $? -eq 0 ]; then
+              echo "✅ $REPO 迁移成功！"
+              SUCCESS=$((SUCCESS + 1))
+            else
+              echo "❌ $REPO 推送失败"
+              FAILED=$((FAILED + 1))
+            fi
+            
+            # 5. 返回上级目录并清理
             cd ..
             rm -rf $REPO.git
             
-            echo "✅ $REPO 迁移完成"
+            echo "========================================="
           done
+          
+          # ============================================
+          # 📊 迁移总结
+          # ============================================
+          echo ""
+          echo "========================================="
+          echo "🎉 迁移完成！"
+          echo "========================================="
+          echo "📊 总计: $TOTAL 个仓库"
+          echo "✅ 成功: $SUCCESS 个"
+          echo "❌ 失败: $FAILED 个"
+          echo "========================================="
+          
+          # 如果有失败，以非0退出码结束，方便在Actions中看到失败状态
+          if [ $FAILED -gt 0 ]; then
+            exit 1
+          fi
