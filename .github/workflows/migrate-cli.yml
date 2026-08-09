@@ -1,7 +1,7 @@
 name: 批量迁移Gitee仓库到GitHub
 
 on:
-  workflow_dispatch:  # 手动触发
+  workflow_dispatch:
 
 jobs:
   migrate:
@@ -18,7 +18,7 @@ jobs:
       - name: 配置 Git
         run: |
           git config --global user.name "hefuhai001"
-          git config --global user.email "你的邮箱@example.com"  # 替换为你的GitHub邮箱
+          git config --global user.email "你的邮箱@example.com"
       
       - name: 批量迁移所有仓库
         env:
@@ -26,12 +26,11 @@ jobs:
           GITEE_USERNAME: ${{ secrets.GITEE_USERNAME }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # 创建临时工作目录
           mkdir -p ~/migrate
           cd ~/migrate
           
           # ============================================
-          # 🔧 所有要迁移的仓库列表（共29个）
+          # 📦 所有要迁移的仓库（共29个）
           # ============================================
           REPOS=(
             "saas-admin"
@@ -53,7 +52,7 @@ jobs:
             "paper-generator-tool"
             "ai-multiple-model"
             "form-design"
-            "bookmark-classfiy"  # 注意原列表中的拼写是 classfiy
+            "bookmark-classfiy"
             "books-manage-system"
             "cultural-heritage-system"
             "hotel-manage-system"
@@ -65,16 +64,29 @@ jobs:
           )
           
           # ============================================
-          # 📋 私有仓库列表（需要单独标注）
+          # 🔒 私有仓库列表（根据Gitee实际情况标注）
           # ============================================
           PRIVATE_REPOS=(
-            # 在这里列出你的私有仓库名，例如：
-            # "saas-admin"
-            # "medicine-system"
+            "voice-accounting"
+            "one-page"
+            "code-run-platform"
+            "valvular-disease-system"
+            "note-of-web"
+            "note-of-ai"
+            "code-run-r"
+            "note-of-django"
+            "paper-generator-tool"
+            "ai-multiple-model"
+            "cultural-heritage-system"
+            "hotel-manage-system"
+            "chat-terminal-app"
+            "geriatric-care-system"
+            "culture-Inheritance-system"
+            "music-player-system"
           )
           
           # ============================================
-          # 开始迁移
+          # 🚀 开始迁移
           # ============================================
           TOTAL=${#REPOS[@]}
           CURRENT=0
@@ -83,6 +95,7 @@ jobs:
           
           echo "========================================="
           echo "📊 总共需要迁移 $TOTAL 个仓库"
+          echo "🔒 其中私有仓库: ${#PRIVATE_REPOS[@]} 个"
           echo "========================================="
           
           for REPO in "${REPOS[@]}"; do
@@ -92,7 +105,7 @@ jobs:
             echo "🔄 [$CURRENT/$TOTAL] 正在处理: $REPO"
             echo "========================================="
             
-            # 检查仓库是否是私有
+            # 检查是否是私有仓库
             IS_PRIVATE="false"
             for PRIVATE_REPO in "${PRIVATE_REPOS[@]}"; do
               if [ "$REPO" == "$PRIVATE_REPO" ]; then
@@ -101,29 +114,28 @@ jobs:
               fi
             done
             
-            # 1. 从 Gitee 克隆镜像
+            # 1. 从 Gitee 克隆
             echo "📥 从 Gitee 克隆 $REPO ..."
             git clone --mirror https://$GITEE_USERNAME:$GITEE_TOKEN@gitee.com/$GITEE_USERNAME/$REPO.git
             
             if [ $? -ne 0 ]; then
-              echo "❌ 克隆失败，跳过 $REPO"
+              echo "❌ 克隆失败（仓库可能不存在或没有权限），跳过 $REPO"
               FAILED=$((FAILED + 1))
               continue
             fi
             
-            # 2. 进入仓库目录
             cd $REPO.git
             
-            # 3. 在 GitHub 上创建同名仓库
+            # 2. 在 GitHub 创建仓库
             if [ "$IS_PRIVATE" == "true" ]; then
               echo "🔒 创建私有仓库: $REPO"
-              gh repo create $REPO --private --confirm || echo "⚠️ 仓库可能已存在，继续推送"
+              gh repo create $REPO --private --confirm || echo "⚠️ 仓库可能已存在"
             else
               echo "🌐 创建公开仓库: $REPO"
-              gh repo create $REPO --public --confirm || echo "⚠️ 仓库可能已存在，继续推送"
+              gh repo create $REPO --public --confirm || echo "⚠️ 仓库可能已存在"
             fi
             
-            # 4. 推送到 GitHub
+            # 3. 推送到 GitHub
             echo "📤 推送到 GitHub ..."
             git push --mirror https://hefuhai001:$GITHUB_TOKEN@github.com/hefuhai001/$REPO.git
             
@@ -135,11 +147,8 @@ jobs:
               FAILED=$((FAILED + 1))
             fi
             
-            # 5. 返回上级目录并清理
             cd ..
             rm -rf $REPO.git
-            
-            echo "========================================="
           done
           
           # ============================================
@@ -154,7 +163,7 @@ jobs:
           echo "❌ 失败: $FAILED 个"
           echo "========================================="
           
-          # 如果有失败，以非0退出码结束，方便在Actions中看到失败状态
           if [ $FAILED -gt 0 ]; then
+            echo "⚠️ 部分仓库迁移失败，请检查上面的日志"
             exit 1
           fi
