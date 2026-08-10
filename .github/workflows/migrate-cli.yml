@@ -32,7 +32,6 @@ jobs:
           # 📦 所有要迁移的仓库（共30个）
           # ============================================
           REPOS=(
-            "one-page"
             "note-of-web"
             "note-of-vue3"
             "note-of-vue2"
