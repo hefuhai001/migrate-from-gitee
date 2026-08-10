@@ -33,7 +33,6 @@ jobs:
           # ============================================
           REPOS=(
             "one-page"
-            "note-of-spring"
             "note-of-web"
             "note-of-vue3"
             "note-of-vue2"
