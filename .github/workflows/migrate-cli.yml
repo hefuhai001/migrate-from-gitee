@@ -28,15 +28,43 @@ jobs:
           mkdir -p ~/migrate
           cd ~/migrate
           
-          # 所有要迁移的仓库（去重后共28个）
+          # ============================================
+          # 📦 所有要迁移的仓库（共30个）
+          # ============================================
           REPOS=(
-            "saas-admin"
-            "aingle-admin"
+            "one-page"
+            "note-of-spring"
+            "note-of-web"
+            "note-of-vue3"
+            "note-of-vue2"
+            "note-of-ai"
+            "note-of-django"
+            "medicine-system"
+            "form-design"
+            "books-zhiyue-platform"
+            "books-manage-system"
+            "cultural-heritage-system"
+            "hotel-manage-system"
+            "community-elder-system"
+            "geriatric-care-system"
+            "culture-Inheritance-system"
+            "music-player-system"
           )
           
-          # 私有仓库列表
+          # ============================================
+          # 🔒 私有仓库列表（共20个）
+          # ============================================
           PRIVATE_REPOS=(
-            "chat-terminal-app"
+            "voice-accounting"
+            "one-page"
+            "note-of-web"
+            "note-of-ai"
+            "note-of-django"
+            "cultural-heritage-system"
+            "hotel-manage-system"
+            "geriatric-care-system"
+            "culture-Inheritance-system"
+            "music-player-system"
           )
           
           TOTAL=${#REPOS[@]}
