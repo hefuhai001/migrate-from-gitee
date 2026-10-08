@@ -32,37 +32,14 @@ jobs:
           # 📦 所有要迁移的仓库（共30个）
           # ============================================
           REPOS=(
-            "note-of-web"
-            "note-of-vue3"
-            "note-of-vue2"
-            "note-of-ai"
-            "note-of-django"
-            "medicine-system"
-            "form-design"
-            "books-zhiyue-platform"
-            "books-manage-system"
-            "cultural-heritage-system"
-            "hotel-manage-system"
-            "community-elder-system"
-            "geriatric-care-system"
-            "culture-Inheritance-system"
-            "music-player-system"
+            # "note-of-web"
           )
           
           # ============================================
           # 🔒 私有仓库列表（共20个）
           # ============================================
           PRIVATE_REPOS=(
-            "voice-accounting"
-            "one-page"
-            "note-of-web"
-            "note-of-ai"
-            "note-of-django"
-            "cultural-heritage-system"
-            "hotel-manage-system"
-            "geriatric-care-system"
-            "culture-Inheritance-system"
-            "music-player-system"
+            "xsmart-agent"
           )
           
           TOTAL=${#REPOS[@]}
